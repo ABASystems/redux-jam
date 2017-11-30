@@ -3,6 +3,9 @@
 `redux-jam` aims to make interacting with relational database based
 APIs easier and more powerful.
 
+NOTE: redux-jam is under heavy development and will likely undergo
+significant interface changes.
+
 ## Installation
 
 ```bash
@@ -189,8 +192,121 @@ all people in the actors relationship.
 
 ### Mutations
 
+Mutations against the local DB are carried by altering an instance of
+a model retrieved with `db.getInstance`. For example, consider the
+following:
+
+```js
+const movie = db.getInstance( movieId )
+movie.title = 'Jaws'
+movie.save()
+```
+
+This will alter the loaded movie instance and save to the local cache
+only. Again, this will not synchronise with the server, it will only
+update the Redux cache. Priort to `movie.save()` the changes are not
+cached to Redux, they are purely local to the current function.
+
+Please see Synchronising for details on pushing to the server.
 
 ## Transactions
 
+One of the more powerful components of JAM is the transactional 
+higher-order component. Often, we will want to make changes to, and/or
+create models of different types, all at once. In order to facilitate
+easy rollback and committing of such changes with a consistent
+interface, JAM uses `TransactionComponent`. Consider the following:
+
+```js
+@TransactionComponent
+class CreateMovie extends Component {
+  render() {
+    const { db, movieId } = this.props
+    const movie = db.getInstance( movieId )
+    return (
+      <input
+        name="title"
+        onChange={x => {
+          movie.title = x
+          movie.save()
+        }}
+      />
+      <button
+        name="commit"
+        onClick={this.commitTransaction}
+      />
+      <button
+        name="abort"
+        onClick={this.abortTransaction}
+      />
+    )
+  }
+}
+```
+
+The above allows for creating a new movie entry in our local Redux
+state. For the duration of the transaction (for as long as the
+component is mounted), the `db` property will be a transaction
+database. For all intents and purposes this is identical to the
+original database, but any changes to it will create a fork in the
+database that is not carried over to any component above or outside
+this instance of `CreateMovie`.
+
+By clicking the `commit` button the temporary transactional database
+is merged with the primary database, saving its contents to the
+Redux state.
+
+By clicking the `abort` button the temporarty transactional database
+is discarded.
+
+There are two major advantages to this approach:
+
+ 1. Any number of alterations to the database may be carried out, and
+    are not limited to alterations to the current model. This means
+    related objects may be created, edited, or deleted, and they are
+    all contained within the transaction.
+    
+ 2. All alterations are immediately visible to any component using the
+    transactional `db` property, but not to any other component. This
+    hides the transaction from any other component that may not wish
+    to have its contents altered by temporary information.
 
 ## Synchronising
+
+Up until now all mutations have been strictly local, i.e. they are
+stored only in the Redux state. In order to persist these changes
+to the server, a single call to a databases `sync` method is required:
+
+```js
+@TransactionComponent
+class CreateMovie extends Component {
+  render() {
+    const { db, movieId } = this.props
+    const movie = db.getInstance( movieId )
+    return (
+      <input
+        name="title"
+        onChange={x => {
+          movie.title = x
+          movie.save()
+          this.saveTransaction()
+        }}
+      />
+      <button
+        name="commit"
+        onClick={x => {
+          this.commitTransaction()
+          this.commit()
+          this.sync()
+        }
+      />
+      <button
+        name="abort"
+        onClick={this.abortTransaction}
+      />
+    )
+  }
+}
+```
+
+TODO: Make the above a bit easier before continuing...
