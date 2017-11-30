@@ -180,7 +180,14 @@ class ShowMovies extends Component {
 }
 ```
 
-TODO
+Using the list of object IDs in `allMovies`, the first movie is
+retrieved from the local database using `db.getInstance`. This
+returns a light wrapper around the data retrieved via the API. The
+many-to-many relationship of `actors` is accessible using an
+interface similar to Django's; `firstMovie.actors.all()` returns
+all people in the actors relationship.
+
+### Mutations
 
 
 ## Transactions
