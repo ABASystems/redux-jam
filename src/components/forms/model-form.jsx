@@ -47,8 +47,7 @@ class ModelForm extends Component {
       ...(fieldProps[fieldName] || {})
     }
     if( field.get( 'choices', undefined ) ) {
-      props.options = field.get( 'choices' ).toJS()
-      props.options = Object.keys( props.options ).map( v => ({value: v, label: props.options[v]}) )
+      props.options = field.get( 'choices' ).toJS().map( v => ({value: v.value, label: v.display_name}) )
     }
     return React.createElement(
       cls,
