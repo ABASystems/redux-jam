@@ -16,9 +16,6 @@ class ModelForm extends Component {
     const isFK = model.fieldIsForeignKey( fieldName )
     if( isFK ) {
       type = 'foreignkey'
-      if( value ) {
-        value = db.get( value )
-      }
     }
     else {
       type = field.get( 'type' )
