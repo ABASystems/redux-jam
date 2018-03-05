@@ -1,5 +1,6 @@
 require( 'isomorphic-fetch' );
 var assert = require( 'chai' ).assert;
+import { expect } from 'code'
 import { Set } from 'immutable';
 
 import { toIndexMap, initCollection, updateCollection, filterObjects,
@@ -77,7 +78,7 @@ describe( 'getObject', function() {
   });
 
   it( 'fails when more than one object', function() {
-    assert.throws( () => getObject( coll, { name: 'Harry' }), ModelTooManyResults );
+    expect( () => getObject( coll, {name: 'Harry'} ) ).to.throw( ModelTooManyResults )
   });
 
   it( 'fails when no object', function() {

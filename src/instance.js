@@ -1,81 +1,98 @@
-import {Map} from 'immutable';
-import uuid from 'uuid';
+import { Map } from 'immutable'
+import uuid from 'uuid'
 
 import {
-  isEmpty, toArray, cmpIds, toList,
+  isEmpty,
+  toArray,
+  cmpIds,
+  toList,
   ModelError
-} from './utils';
+} from './utils'
 
+/**
+ * A convenience class to represent model data.
+ *
+ * Provides getters/setters to assist in modifying model data locally,
+ * then saving to the DB later. Also wraps relationships to make
+ * finding local DB instances easier.
+ */
 export default class Instance {
 
   constructor( data, model, db ) {
-
-    if( isEmpty( model ) )
-      throw new ModelError( 'Instance: No model given.' );
-    if( isEmpty( db ) )
-      throw new ModelError( 'Instance: No DB given.' );
-
-    this._db = db;
-    this._model = model;
-    this.id = data.get( 'id' ) || uuid.v4();
-    this._type = model.type;
-    this._initial = data;
-    this._prepareAttributes( data );
-    this._prepareRelationships( data );
-    this._values = this._initial;
+    if( isEmpty( model ) ) {
+      throw new ModelError( 'Instance: No model given.' )
+    }
+    if( isEmpty( db ) ) {
+      throw new ModelError( 'Instance: No DB given.' )
+    }
+    this.id = data.get( 'id' ) || uuid.v4()
+    this._db = db
+    this._model = model
+    this._type = model.type
+    this._initial = data
+    this._prepareAttributes( data )
+    this._prepareRelationships( data )
+    this._values = this._initial
   }
 
+  /**
+   * Add model attributes to the instance.
+   */
   _prepareAttributes( data ) {
     for( const name of this._model.attributes.keys() ) {
-      const attr = this._model.attributes.get( name );
-      if( data[name] !== undefined )
-        this._initial = this._initial.set( name, data[name] );
+      const attr = this._model.attributes.get( name )
+      if( data[name] !== undefined ) {
+        this._initial = this._initial.set( name, data[name] )
+      }
       Object.defineProperty( this, name, {
         get: function() {
-          return this._values.get( name );
+          return this._values.get( name )
         },
         set: function( x ) {
-          this._values = this._values.set( name, x );
+          this._values = this._values.set( name, x )
         }
-      });
+      })
     }
   }
 
+  /**
+   * Add model relationships to the instance.
+   */
   _prepareRelationships( data ) {
     for( const name of this._model.relationships.keys() ) {
-      const rel = this._model.relationships.get( name );
+      const rel = this._model.relationships.get( name )
       if( rel.get( 'many' ) ) {
-        this._initial = this._initial.set( name, data[name] );
+        this._initial = this._initial.set( name, data[name] )
         Object.defineProperty( this, name, {
           get: function() {
             return {
               all: () => {
                 return this._values.get( name ).map( x =>
                   this._db.getInstance( x )
-                );
+                )
               },
               add: x => {
                 this._values = this._values.updateIn( [name], y =>
                   y.add( this._db.getId( x ) )
-                );
+                )
               },
               remove: x => {
                 this._values = this._values.updateIn( [name], y =>
                   y.remove( this._db.getId( x ) )
-                );
+                )
               }
-            };
+            }
           },
           set: function( x ) {
-            throw ModelError( 'Cannot directly set many-to-many.' );
+            throw ModelError( 'Cannot directly set many-to-many.' )
           }
-        });
+        })
       }
       else {
 
         // Set the initial value if it exists.
         if( data[name] !== undefined ) {
-          this._initial = this._initial.set( name, data[name] );
+          this._initial = this._initial.set( name, data[name] )
         }
 
         // The getter for foriegn-keys will return an Instance object
@@ -91,37 +108,36 @@ export default class Instance {
             return obj
           },
           set: function( x ) {
-            if( x )
+            if( x ) {
               this._values = this._values.set( name, this._db.getId( x ) )
-            else
+            }
+            else {
               this._values = this._values.set( name, x )
+            }
           }
-        });
+        })
       }
     }
   }
 
   save() {
-    this._db.createOrUpdate( this._values );
+    this._db.createOrUpdate( this._values )
   }
 
   delete() {
-    this._db.remove( this._values );
-    /* let id = uuid.v4();
-     * this._initial = this._initial.set( 'id', id );
-     * this._values = this._values.set( 'id', id );*/
+    this._db.remove( this._values )
   }
 
   reset() {
-    this._values = this._initial;
+    this._values = this._initial
   }
 
   getDB() {
-    return this._db;
+    return this._db
   }
 
   getModel() {
-    return this._model;
+    return this._model
   }
 
 }

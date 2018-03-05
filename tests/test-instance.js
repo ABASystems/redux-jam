@@ -1,30 +1,49 @@
-require( 'isomorphic-fetch' )
-console.debug = () => {}
-var jsdom = require( 'jsdom-global' )()  // must come first
-var assert = require( 'chai' ).assert
+import 'isomorphic-fetch'
+import { expect } from 'code'
+import sinon from 'sinon'
 import { Set } from 'immutable'
 
 import DB from '../src/db'
 import { makeId } from '../src/utils'
 import { schema, getJsonApiData } from './model-fixture'
 
-describe( 'Instance', () => {
+// Don't dump stuff to the terminal.
+console.debug = () => {}
 
-  describe( 'foreign-key', () => {
+describe( 'Given a populated instance', () => {
+  let db = new DB( null, {schema} )
+  db.loadJsonApi( getJsonApiData() )
 
-    it( 'get returns instance', () => {
-      let db = new DB( null, {schema} )
-      db.loadJsonApi( getJsonApiData() )
+  describe( 'selecting a foreign-key', () => {
+
+    it( 'returns an instance', () => {
       let book = db.getInstance( 'book', 1 )
-      assert.notEqual( book.next, undefined )
-      assert.notEqual( book.next._db, undefined )
+      expect( book.next ).to.not.be.undefined()
+      expect( book.next._db ).to.not.be.undefined()
     })
 
-    it( 'get returns undefined if nothing there', () => {
-      let db = new DB( null, {schema} )
-      db.loadJsonApi( getJsonApiData() )
+    describe( 'when undefined', () => {
+
+      it( 'returns undefined', () => {
+        let db = new DB( null, {schema} )
+        db.loadJsonApi( getJsonApiData() )
+        let book = db.getInstance( 'book', 1 )
+        expect( book.authorFK ).to.be.undefined()
+      })
+
+    })
+
+  })
+
+  describe( 'resetting', () => {
+
+    it( 'undoes any changes', () => {
       let book = db.getInstance( 'book', 1 )
-      assert.equal( book.authorFK, undefined )
+      expect( book.title ).to.not.equal( 'x' )
+      book.title = 'x'
+      expect( book.title ).to.equal( 'x' )
+      book.reset()
+      expect( book.title ).to.not.equal( 'x' )
     })
 
   })
