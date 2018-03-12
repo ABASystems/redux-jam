@@ -51,7 +51,7 @@
     "webpack-node-externals": "^1.5.4"
   },
   "dependencies": {
-    "js-tinyapi": "^0.0.4",
+    "js-tinyapi": "^0.0.10",
     "react": "^16.2.0",
     "react-redux": "^5.0.6",
     "redux": "^3.7.2",
