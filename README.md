@@ -124,7 +124,7 @@ Options for relationships:
 If you're using Django and DRF, your schema can be loaded into JAM
 automatically, which is particularly convenient.
 
-Refer to [Django-JAM](https://github.com/ABASystems/django-jam)
+Refer to [Django-JAM](https://github.com/uptick/django-jam)
 
 ## Loading Data
 

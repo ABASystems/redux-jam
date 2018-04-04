@@ -4,7 +4,7 @@
   "description": "A Redux JSON-API model layer.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ABASystems/redux-jam.git"
+    "url": "https://github.com/uptick/redux-jam.git"
   },
   "main": "lib/index.js",
   "scripts": {
