@@ -238,6 +238,15 @@ export default class Model {
     return this._fieldOp(fldName, type => Field.equals(type, a, b))
   }
 
+  lookup(record, fields) {
+    if (!Array.isArray(fields))
+      fields = fields.split('__')
+    if (fields.length > 1)
+      for (const f of fields.slice(0, fields.length - 1))
+        obj = this.get(obj[f])
+    return obj[fields[fields.length - 1]]
+  }
+
   _fieldOp(fldName, callback, defaultValue) {
     let r = defaultValue
     this.switchOnField(fldName, {
